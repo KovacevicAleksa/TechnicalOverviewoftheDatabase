@@ -263,6 +263,7 @@ SET prezime='Peric'
 WHERE id_zaposlenog=4;
 ------------trigeri2ifuncije
 
+
 -----kod za pod tabele
 ALTER TABLE VOZILA
 ADD prosecna_potrosnja_vozila NUMBER(10,2);
@@ -284,8 +285,7 @@ BEGIN
   COMMIT;
 END;
 ---TEST1---
-INSERT INTO VOZILA (broj_sasije, jmbg_stranke, sifra_vrste, marka, registarska_oznaka, datum_prve_registacije, masa, nosivost, snaga, kubikaza, boja, broj_mesta, broj_motora, godiste, predjena_kilometraza)
-INSERT INTO VOZILA VALUES ('AC3UIHRGM3M214421', 1708997720017, 8, 'Peugeot 308', 'NI-0333-FG', '07/25/2016', 1500, 700, 75, 1399, 'Plava', 5, 'A4S91137PA', 2018, 70000);
+INSERT INTO VOZILA VALUES ('AC3UIHRGM3M214421', 1708997720017, 8, 'Peugeot 308', 'NI-0333-FG', '07/25/2016', 1500, 700, 75, 1399, 'Plava', 5, 'A4S91137PA', 2018, 70000,'',7);
 
 UPDATE VOZILA SET masa = 1600 WHERE broj_sasije = 'AC3UIHRGM3M214421';
 ----TRIGER2---
@@ -299,7 +299,15 @@ END;
 UPDATE VOZILA
 SET prosecna_potrosnja_vozila = 6.4
 WHERE broj_sasije='AC3UIHRGM3M214421'
------funkcija jmbg----
+-----indeksi
+CREATE INDEX petraga_stranke_broj_telefona ON STRANKE(broj_telefona);
+-----
+CREATE INDEX petraga_zaposleni_ime_i_prezime ON ZAPOSLENI(ime,prezime);
+----
+CREATE INDEX petraga_vozila_godiste ON VOZILA(godiste);
+----
+CREATE INDEX petraga_vozila_registarska_oznaka ON VOZILA(registarska_oznaka);
+-------------funcija
 CREATE OR REPLACE FUNCTION brojVozila
 (p_godiste IN NUMBER)
 RETURN VARCHAR2
@@ -314,23 +322,43 @@ BEGIN
  (-20000,'Nema vozila koja su prozivedena
 '||p_godiste||'!');
  END IF;
-RETURN 'Broj vozila sa godistem'||p_godiste||' je '||v_brojac||'.';
+RETURN 'Broj vozila sa godistem '||p_godiste||' je '||v_brojac||'.';
 END;
 ---test1.1---
-SELECT brojVozila(2015) FROM DUAL
+SELECT brojVozila(2025) FROM DUAL
 ---test1.2---
 SELECT brojVozila(2012) FROM DUAL
----funcija2----
------indeksi
-CREATE INDEX pretraga_polise_broj_polise ON POLISE_OSIGURANJA(broj_polise);
-----
-CREATE INDEX petraga_vozila_broj_sasije_jmbg_stranke ON VOZILA(broj_sasije, jmbg_stranke);
-------
-CREATE INDEX petraga_stranke_jmbg ON STRANKE(jmbg);
-------
-CREATE INDEX petraga_vrste_sifra ON VRSTE(sifra);
------
-CREATE INDEX petraga_zaposleni_id_zaposlenog ON ZAPOSLENI(id_zaposlenog);
-----
-CREATE INDEX petraga_vozila_godiste ON VOZILA(godiste);
+
+---procedura2----
+    CREATE OR REPLACE PROCEDURE proveri_ekonomicnost_vozila (p_broj_sasije IN VARCHAR2)
+    IS
+    v_prosecna_potrosnja_vozila NUMBER;
+    BEGIN
+    SELECT prosecna_potrosnja_vozila INTO v_prosecna_potrosnja_vozila FROM VOZILA WHERE broj_sasije = p_broj_sasije;
+    
+    IF v_prosecna_potrosnja_vozila < 10 THEN
+        RAISE_APPLICATION_ERROR (-20000,'Vozilo je ekonomično. Prosečna potrošnja vozila je ' || v_prosecna_potrosnja_vozila || ' litara na 100 kilometara.');
+    ELSE
+        RAISE_APPLICATION_ERROR (-20000,'Vozilo nije ekonomično. Prosečna potrošnja vozila je ' || v_prosecna_potrosnja_vozila || ' litara na 100 kilometara.');
+    END IF;
+
+    EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('Vozilo nije pronađeno po broju šasije!');
+    END;
+
+---test2----
+DECLARE
+  v_broj_sasije VARCHAR2(20) := 'VF3XUHRYMJM123456';
+BEGIN
+  proveri_ekonomicnost_vozila(v_broj_sasije);
+  
+END;
+----test2.1--
+DECLARE
+  v_broj_sasije VARCHAR2(20) := '21343215512343';
+BEGIN
+  proveri_ekonomicnost_vozila(v_broj_sasije);
+  
+END;
 
