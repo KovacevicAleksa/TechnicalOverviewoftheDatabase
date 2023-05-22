@@ -262,8 +262,6 @@ UPDATE POLISE_OSIGURANJA
 SET prezime='Peric'
 WHERE id_zaposlenog=4;
 ------------trigeri2ifuncije
-
-
 -----kod za pod tabele
 ALTER TABLE VOZILA
 ADD prosecna_potrosnja_vozila NUMBER(10,2);
@@ -337,9 +335,9 @@ SELECT brojVozila(2012) FROM DUAL
     SELECT prosecna_potrosnja_vozila INTO v_prosecna_potrosnja_vozila FROM VOZILA WHERE broj_sasije = p_broj_sasije;
     
     IF v_prosecna_potrosnja_vozila < 10 THEN
-        RAISE_APPLICATION_ERROR (-20000,'Vozilo je ekonomično. Prosečna potrošnja vozila je ' || v_prosecna_potrosnja_vozila || ' litara na 100 kilometara.');
+        DBMS_OUTPUT.PUT_LINE('Vozilo nije ekonomično. Prosečna potrošnja vozila je ' || v_prosecna_potrosnja_vozila || ' litara na 100 kilometara.');
     ELSE
-        RAISE_APPLICATION_ERROR (-20000,'Vozilo nije ekonomično. Prosečna potrošnja vozila je ' || v_prosecna_potrosnja_vozila || ' litara na 100 kilometara.');
+        DBMS_OUTPUT.PUT_LINE('Vozilo je ekonomično. Prosečna potrošnja vozila je ' || v_prosecna_potrosnja_vozila || ' litara na 100 kilometara.');
     END IF;
 
     EXCEPTION
@@ -361,4 +359,3 @@ BEGIN
   proveri_ekonomicnost_vozila(v_broj_sasije);
   
 END;
-
