@@ -359,3 +359,4 @@ BEGIN
   proveri_ekonomicnost_vozila(v_broj_sasije);
   
 END;
+-----app make---
