@@ -328,35 +328,33 @@ SELECT brojVozila(2025) FROM DUAL
 SELECT brojVozila(2012) FROM DUAL
 
 ---procedura2----
+ALTER TABLE VOZILA ADD EKONOMICNOST VARCHAR2(20);
+
     CREATE OR REPLACE PROCEDURE proveri_ekonomicnost_vozila (p_broj_sasije IN VARCHAR2)
-    IS
+IS
     v_prosecna_potrosnja_vozila NUMBER;
-    BEGIN
+BEGIN
     SELECT prosecna_potrosnja_vozila INTO v_prosecna_potrosnja_vozila FROM VOZILA WHERE broj_sasije = p_broj_sasije;
-    
+
     IF v_prosecna_potrosnja_vozila < 10 THEN
-        DBMS_OUTPUT.PUT_LINE('Vozilo nije ekonomično. Prosečna potrošnja vozila je ' || v_prosecna_potrosnja_vozila || ' litara na 100 kilometara.');
+        DBMS_OUTPUT.PUT_LINE('Ekonomično. Prosečna potrošnja vozila je ' || v_prosecna_potrosnja_vozila || ' litara na 100 kilometara.');
+        UPDATE VOZILA SET EKONOMICNOST = 'Ekonomično vozilo' WHERE broj_sasije = p_broj_sasije;
     ELSE
-        DBMS_OUTPUT.PUT_LINE('Vozilo je ekonomično. Prosečna potrošnja vozila je ' || v_prosecna_potrosnja_vozila || ' litara na 100 kilometara.');
+        DBMS_OUTPUT.PUT_LINE('Nije ekonomično. Prosečna potrošnja vozila je ' || v_prosecna_potrosnja_vozila || ' litara na 100 kilometara.');
+        
+        UPDATE VOZILA SET EKONOMICNOST = 'Nije ekonomično' WHERE broj_sasije = p_broj_sasije;
     END IF;
 
-    EXCEPTION
+EXCEPTION
     WHEN NO_DATA_FOUND THEN
         DBMS_OUTPUT.PUT_LINE('Vozilo nije pronađeno po broju šasije!');
-    END;
+END;
 
----test2----
-DECLARE
-  v_broj_sasije VARCHAR2(20) := 'VF3XUHRYMJM123456';
 BEGIN
-  proveri_ekonomicnost_vozila(v_broj_sasije);
-  
+    proveri_ekonomicnost_vozila('JTEBU5JR0F5201234'); 
 END;
-----test2.1--
-DECLARE
-  v_broj_sasije VARCHAR2(20) := '21343215512343';
+
+ 
 BEGIN
-  proveri_ekonomicnost_vozila(v_broj_sasije);
-  
+    proveri_ekonomicnost_vozila('312231231'); 
 END;
------app make---
